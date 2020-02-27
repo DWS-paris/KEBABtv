@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Check form data
                 searchData.value.length > 0 
-                ? getMovieList(searchData.value) 
+                ? fetchFunction(searchData.value) 
                 : displayError(searchData, 'Minimum 1 caractère');
             });
         };
@@ -34,19 +34,24 @@ document.addEventListener('DOMContentLoaded', () => {
             tag.addEventListener('focus', () => searchLabel.textContent = '');
         };
 
-        const getMovieList = (keywords, index = 1) => {
-            fetch( themoviedbUrl + keywords + '&page=' + index )
+        const fetchFunction = (keywords, index = 1) => {
+            
+            let fetchUrl = null;
+
+            typeof keywords === 'number' 
+            ? fetchUrl = `https://api.themoviedb.org/3/movie/${keywords}?api_key=6fd32a8aef5f85cabc50cbec6a47f92f`
+            : fetchUrl = themoviedbUrl + keywords + '&page=' + index
+
+
+            fetch( fetchUrl )
             .then( response => response.ok ? response.json() : 'Response not OK' )
-            .then( jsonData => displayMovieList(jsonData.results))
+            .then( jsonData => {
+                typeof keywords === 'number' 
+                ? displayPopin(jsonData)
+                : displayMovieList(jsonData.results)
+            })
             .catch( err => console.error(err) );
         };
-
-        const getMovieDetails = id => {
-            fetch( `https://api.themoviedb.org/3/movie/${id}?api_key=6fd32a8aef5f85cabc50cbec6a47f92f` )
-            .then( response => response.ok ? response.json() : 'Response not OK' )
-            .then( jsonData => displayPopin(jsonData))
-            .catch( err => console.error(err) );
-        }
 
         const displayMovieList = collection => {
             searchData.value = '';
@@ -78,7 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const getPopinLink = linkCollection => {
             for( let link of linkCollection ){
                 link.addEventListener('click', () => {
-                    getMovieDetails( link.getAttribute('movie-id') );
+                    // +var = parseInt(var) || parseFloat(var)
+                    fetchFunction( +link.getAttribute('movie-id') );
                 });
             };
         };
