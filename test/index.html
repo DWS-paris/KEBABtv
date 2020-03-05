@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PopCorn JS</title>
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<header>
+    <form action="#" class="form-search">
+        <label for="searchData">Search a movie <span></span></label>
+        <input type="text" name="searchData" id="searchData" minlength="1" required>
+        <button type="submit">Search</button>
+    </form>
+</header>
+
+<main>
+
+    <form action="#" class="form-register">
+        <h2>Inscription</h2>
+        <span>
+            <label for="registerPseudo">Pseudo</label>
+            <input value="Maeva" type="text" required id="registerPseudo">
+        </span>
+        <span>
+            <label for="registerEmail">Email</label>
+            <input value="maeva@gmail.com" type="text" required id="registerEmail">
+        </span>
+        <span>
+            <label for="registerPw">Mot de passe</label>
+            <input value="0000klL!" type="text" required id="registerPw">
+        </span>
+        <button type="submit">Valider</button>
+    </form>
+
+    <form class="form-login">
+        <h2>Connexion</h2>
+        <span>
+            <label for="loginEmail">Email</label>
+            <input type="text" required id="loginEmail">
+        </span>
+        <span>
+            <label for="loginPw">Mot de passe</label>
+            <input type="password" required id="loginPw">
+        </span>
+        <button type="submit">Valider</button>
+    </form>
+
+    <section id="moviePopin">
+        <article></article>
+    </section>
+
+    <section id="movieList"></section>
+</main>
+
+<script src="./app.js"></script>
+</body>
+</html>

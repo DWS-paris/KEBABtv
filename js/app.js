@@ -6,8 +6,18 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 
     Déclarations
     */
-        const searchForm = document.querySelector('header form');
-        const searchLabel = document.querySelector('header form span');
+        const apiUrl = 'https://api.dwsapp.io';
+        const registerForm = document.querySelector('#registerForm');
+        const userEmail = document.querySelector('[name="userEmail"]');
+        const userPassword = document.querySelector('[name="userPassword"]');
+        const userPseudo = document.querySelector('[name="userPseudo"]');
+
+        const loginForm = document.querySelector('#loginForm');
+        const loginEmail = document.querySelector('[name="loginEmail"]');
+        const loginPassword = document.querySelector('[name="loginPassword"]');
+
+        const searchForm = document.querySelector('#searchForm');
+        const searchLabel = document.querySelector('#searchForm span');
         const searchData = document.querySelector('[name="searchData"]');
         const themoviedbUrl = 'https://api.themoviedb.org/3/search/movie?api_key=6fd32a8aef5f85cabc50cbec6a47f92f&query=';
         const movieList = document.querySelector('#movieList');
@@ -17,7 +27,58 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 
     Fonctions
     */
-        const getSearchSumbit = () => {
+        const checkUserToken = () => {
+            fetch( `${apiUrl}/api/me` )
+            .then( apiResponse => {
+                return apiResponse.json()
+            })
+            .then(data => console.log(data))
+            .catch( apiError => {
+                console.log(apiError)
+            })
+        }
+        const getFormSumbit = () => {
+            // Get registerForm submit
+            registerForm.addEventListener('submit', event => {
+                // Stop event propagation
+                event.preventDefault();
+
+                // Check form data
+                let formError = 0;
+
+                if(userEmail.value.length < 5) { formError++ };
+                if(userPassword.value.length < 5) { formError++ };
+                if(userPseudo.value.length < 2) { formError++ };
+
+                formError === 0
+                ? postFetch('register', { 
+                    email: userEmail.value, 
+                    password: userPassword.value, 
+                    pseudo: userPseudo.value 
+                })
+                : console.log('form not ok');
+            });
+
+            // Get loginForm submit
+            loginForm.addEventListener('submit', event => {
+                // Stop event propagation
+                event.preventDefault();
+
+                // Check form data
+                let formError = 0;
+
+                if(loginEmail.value.length < 5) { formError++ };
+                if(loginPassword.value.length < 5) { formError++ };
+
+                formError === 0
+                ? postFetch('login', { 
+                    email: loginEmail.value, 
+                    password: loginPassword.value
+                })
+                : console.log('form not ok');
+            });
+
+            // Get searchForm submit
             searchForm.addEventListener('submit', event => {
                 // Stop event propagation
                 event.preventDefault();
@@ -28,6 +89,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 : displayError(searchData, 'Minimum 1 caractère');
             });
         };
+
+        const postFetch = (endpoint, data) => {
+            // Send POST Fetch
+            fetch( `${apiUrl}/api/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then( apiResponse => {
+                // Vérifier le status de la requête
+                if( apiResponse.ok ){
+                    // Extraire les données JSON de la réponse
+                    return apiResponse.json();
+                }
+                else{
+                    console.error(apiResponse.statusText);
+                };
+            })
+            .then( jsonData => {
+                console.log(jsonData);
+            })
+            .catch( apiError => {
+                console.error(apiError);
+            });
+        }
 
         const displayError = (tag, msg) => {
             searchLabel.textContent = msg;
@@ -48,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then( jsonData => {
                 typeof keywords === 'number' 
                 ? displayPopin(jsonData)
-                : displayMovieList(jsonData.results)
+                : displayMovieList(jsonData.results);
             })
             .catch( err => console.error(err) );
         };
@@ -57,7 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
             searchData.value = '';
             movieList.innerHTML = '';
 
-            console.log(collection)
             for( let i = 0; i < collection.length; i++ ){
                 movieList.innerHTML += `
                     <article>
@@ -122,6 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 
     Lancer IHM
     */
-        getSearchSumbit();
+        getFormSumbit();
     //
 });

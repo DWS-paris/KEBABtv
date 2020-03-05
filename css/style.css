@@ -81,3 +81,7 @@ figure:hover + div.overview{
 #moviePopin article div{
     width: calc( 50% - 1rem );
 }
+
+#registerForm, #loginForm{
+    display: flex;
+}

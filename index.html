@@ -12,7 +12,20 @@
     <body>
 
         <header>
-            <form action="#">
+            <form action="#" id="registerForm">
+                <input type="text" name="userEmail" required minlength="5" placeholder="Votre email">
+                <input type="text" name="userPassword" required minlength="5" placeholder="Votre mot de passe">
+                <input type="text"  name="userPseudo" required minlength="2" placeholder="Votre pseudo">
+                <button type="submit">Register</button>
+            </form>
+
+            <form action=#"" id="loginForm">
+                <input type="text" name="loginEmail" required minlength="5" placeholder="Votre email">
+                <input type="text" name="loginPassword" required minlength="5" placeholder="Votre mot de passe">
+                <button type="submit">Login</button>
+            </form>
+
+            <form action="#" id="searchForm">
                 <label for="searchData">Search a movie <span></span></label>
                 <input type="text" name="searchData" id="searchData" minlength="1" required>
                 <button type="submit">Search</button>
