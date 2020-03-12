@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const moviePopin = document.querySelector('#moviePopin article');
         const favoriteList = document.querySelector('#favorite ul');
         const loading = document.querySelector('#loading');
+        const formError = document.querySelector('#formError');
 
         /* 
         PouchDB
@@ -102,12 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log(fetchData)
                     })
                     .catch( fetchError => {
-                        console.log(fetchError)
+                        displayError(fetchError.message)
                     })
                 }
-                else{
-                    console.log('form not ok')
-                }
+                else{ displayError('Check mandatory fields') }
             });
 
             // Get loginForm submit
@@ -132,12 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         checkUserToken('checkuser')
                     })
                     .catch( fetchError => {
-                        console.log(fetchError)
+                        displayError(fetchError.message)
                     })
                 }
-                else{
-                    console.log('form not ok')
-                }
+                else{ displayError('Check mandatory fields') }
             });
 
             // Get searchForm submit
@@ -156,13 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log(fetchError)
                     })
                 }
-                else{
-                    console.log('form not ok')
-                }
+                else{ displayError('Check mandatory fields') }
             });
 
             // Get chatForm submit
-            chatForm.addEventListener('submit', event => {
+            /* chatForm.addEventListener('submit', event => {
                 // Stop event propagation
                 event.preventDefault();
 
@@ -181,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log(pouchError)
                     })
                 }
-            });
+            }); */
         };
 
         const chatId =  () => {
@@ -191,9 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return Math.random().toString(36).substr(2, 9);
         };
 
-        const displayError = (tag, msg) => {
-            searchLabel.textContent = msg;
-            tag.addEventListener('focus', () => searchLabel.textContent = '');
+        const displayError = msg => {
+            formError.innerHTML = `<p>${msg}</p>`;
+            formError.classList.add('open');
+            setTimeout( () => {
+                formError.classList.remove('open');
+            }, 3000)
         };
 
         const displayMovieList = collection => {
@@ -316,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     checkUserToken('favorite')
                 })
                 .catch( fetchError => {
-                    console.log(fetchError)
+                    displayError(fetchError.message)
                 })
             })
         }

@@ -27,11 +27,18 @@ ul{
     list-style: none;
 }
 
-body, #movieList, #searchForm.open, nav {
+body, #movieList, #searchForm.open, nav, #formError {
     display: -webkit-flex;
     display: -moz-flex;
     display: -o-flex;
     display: flex;
+}
+
+#formError{
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    -o-flex-direction: column;
+    flex-direction: column;
 }
 
 body {
@@ -66,7 +73,7 @@ nav {
     padding-bottom: .9rem;
 }
 
-button, figure, figcaption, #moviePopin, #movieList, #favorite li, #loading{
+button, figure, figcaption, #moviePopin, #movieList, #favorite li, #loading, #formError{
     -webkit-transition: all .3s;
     -moz-transition: all .3s;
     -o-transition: all .3s;
@@ -373,4 +380,22 @@ figcaption {
 #chatboxe form{
     display: flex;
     align-items: stretch;
+}
+
+#formError {
+    position: absolute;
+    bottom: 6rem;
+    left: -30rem;
+    width: calc(100% - 4rem);
+    background: white;
+    padding: 2rem;
+    color: red;
+}
+
+#formError.open{
+    left: 2rem;
+}
+
+#formError p {
+    margin: auto;
 }

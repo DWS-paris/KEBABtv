@@ -22,7 +22,6 @@ class FETCHrequest {
     
     fetch(){
         return new Promise( (resolve, reject) => {
-            console.log(this.url)
             fetch( this.url, this.requestHeader )
             .then( apiResponse => {
                 // Vérifier le status de la requête
@@ -31,7 +30,8 @@ class FETCHrequest {
                     return apiResponse.json();
                 }
                 else{
-                    return reject(apiResponse);
+                    return apiResponse.json()
+                    .then( message => reject(message) )
                 };
             })
             .then( jsonData => resolve(jsonData))
