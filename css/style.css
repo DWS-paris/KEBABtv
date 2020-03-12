@@ -385,7 +385,7 @@ figcaption {
 #formError {
     position: absolute;
     bottom: 6rem;
-    left: -30rem;
+    left: -110%;
     width: calc(100% - 4rem);
     background: white;
     padding: 2rem;
