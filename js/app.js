@@ -8,11 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     */  
         const localSt = 'qsekjh';
         const mainNav = document.querySelector('header nav');
-        const apiUrl = 'http://localhost:8898';
+        const apiUrl = 'https://api.dwsapp.io';
         const registerForm = document.querySelector('#registerForm');
         const userEmail = document.querySelector('[name="userEmail"]');
         const userPassword = document.querySelector('[name="userPassword"]');
         const userPseudo = document.querySelector('[name="userPseudo"]');
+
+        const chatForm = document.querySelector('#chatboxe form');
+        const chatMessage = document.querySelector('#chatMessage');
 
         const loginForm = document.querySelector('#loginForm');
         const loginEmail = document.querySelector('[name="loginEmail"]');
@@ -27,20 +30,51 @@ document.addEventListener('DOMContentLoaded', () => {
         const favoriteList = document.querySelector('#favorite ul');
         const loading = document.querySelector('#loading');
 
-        // https://vsrequest.video/request.php?key=oh61giHx16GXKSIz&secret_key=h9oe5ezesk0c0f9zk143zpkd7tba63&video_id=348&tmdb=1&ip=77.204.106.81
+        /* 
+        PouchDB
+        */
+            const localDB = new PouchDB('chat_room');
+            const remoteDB = new PouchDB('https://couch.dwsapp.io/chat_room/');
+
+            localDB.replicate.to(remoteDB);
+            localDB.replicate.from(remoteDB);
+        //
     //
 
     /* 
     Fonctions
     */
-        const checkUserToken = token => {
-            return new Promise( ( resolve, reject ) => {
-                fetch( `${apiUrl}/api/me/${token}` )
-                .then( apiResponse => {
-                    return apiResponse.json()
-                })
-                .then(data => resolve(data))
-                .catch( apiError => reject(apiError))
+        const checkUserToken = (step = 'favorite') => {
+            new FETCHrequest(
+                `${apiUrl}/api/me/${localStorage.getItem(localSt)}`,
+                'GET'
+            )
+            .fetch()
+            .then( fetchData => {
+                // Check step
+                if( step === 'favorite' ){ // Add favorite
+                    // Display favorites
+                    displayFavorite(fetchData.data.favorite)
+                }
+                else if( step === 'checkuser' ){ // First check
+                    console.log(fetchData)
+                    // Hide register and loggin form
+                    registerForm.classList.add('hidden');
+                    loginForm.classList.add('hidden');
+                    searchForm.classList.add('open');
+
+                    // Display nav
+                    displayNav(fetchData.data.user.pseudo);
+
+                    // Display favorites
+                    displayFavorite(fetchData.data.favorite)
+
+                    // Get form submit event
+                    getFormSumbit();
+                }
+            })
+            .catch( fetchError => {
+                console.log(fetchError)
             })
         }
 
@@ -57,13 +91,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(userPassword.value.length < 5) { formError++ };
                 if(userPseudo.value.length < 2) { formError++ };
 
-                formError === 0
-                ? postFetch('register', { 
-                    email: userEmail.value, 
-                    password: userPassword.value, 
-                    pseudo: userPseudo.value 
-                })
-                : console.log('form not ok');
+                if(formError === 0){
+                    new FETCHrequest(`${apiUrl}/api/register`, 'POST', { 
+                        email: userEmail.value, 
+                        password: userPassword.value, 
+                        pseudo: userPseudo.value 
+                    })
+                    .fetch()
+                    .then( fetchData => {
+                        console.log(fetchData)
+                    })
+                    .catch( fetchError => {
+                        console.log(fetchError)
+                    })
+                }
+                else{
+                    console.log('form not ok')
+                }
             });
 
             // Get loginForm submit
@@ -77,12 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(loginEmail.value.length < 5) { formError++ };
                 if(loginPassword.value.length < 5) { formError++ };
 
-                formError === 0
-                ? postFetch('login', { 
-                    email: loginEmail.value, 
-                    password: loginPassword.value
-                })
-                : console.log('form not ok');
+                if(formError === 0){
+                    new FETCHrequest(`${apiUrl}/api/login`, 'POST', { 
+                        email: loginEmail.value, 
+                        password: loginPassword.value
+                    })
+                    .fetch()
+                    .then( fetchData => {
+                        localStorage.setItem(localSt, fetchData.data.identity._id)
+                        checkUserToken('checkuser')
+                    })
+                    .catch( fetchError => {
+                        console.log(fetchError)
+                    })
+                }
+                else{
+                    console.log('form not ok')
+                }
             });
 
             // Get searchForm submit
@@ -92,102 +147,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Check form data
                 if(searchData.value.length > 0){
-                    loading.classList.add('open'); 
-                    setTimeout(() => { fetchFunction(searchData.value) }, 600);
+                    new FETCHrequest(`${themoviedbUrl}${searchData.value}&page=1`, 'GET')
+                    .fetch()
+                    .then( fetchData => {
+                        displayMovieList(fetchData.results)
+                    })
+                    .catch( fetchError => {
+                        console.log(fetchError)
+                    })
                 }
                 else{
-                    displayError(searchData, 'Minimum 1 caractère');
+                    console.log('form not ok')
+                }
+            });
+
+            // Get chatForm submit
+            chatForm.addEventListener('submit', event => {
+                // Stop event propagation
+                event.preventDefault();
+
+                // Check form data
+                if(chatMessage.value.length > 0){
+                    localDB.put({
+                        _id:chatId(),
+                        author: localStorage.getItem(localSt),
+                        pseudo: localStorage.getItem('user-pseudo'),
+                        messagee: chatMessage.value
+                    })
+                    .then( pouchData => {
+                        console.log(pouchData)
+                    })
+                    .catch( pouchError => {
+                        console.log(pouchError)
+                    })
                 }
             });
         };
 
-        const postFetch = (endpoint, data) => {
-            // Send POST Fetch
-            fetch( `${apiUrl}/api/${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then( apiResponse => {
-                // Vérifier le status de la requête
-                if( apiResponse.ok ){
-                    // Extraire les données JSON de la réponse
-                    return apiResponse.json();
-                }
-                else{
-                    console.error(apiResponse.statusText);
-                };
-            })
-            .then( jsonData => {
-                if( endpoint === 'login' ){
-                    // Add user ID in LocalStorage
-                    localStorage.setItem(localSt, jsonData.data.identity._id);
-
-                    checkUserToken(jsonData.data.identity._id)
-                    .then( apiResponse => {
-                        registerForm.classList.add('hidden');
-                        loginForm.classList.add('hidden');
-                        displayNav(apiResponse.data.user.pseudo)
-                        searchForm.classList.add('open');
-                        if( apiResponse.data.favorite.length > 0 ){
-                            displayFavorite(apiResponse.data.favorite)
-                        }
-                    })
-                    .catch( err => {
-                        console.log(err)
-                    } )
-                }
-                else if( endpoint === 'favorite' ){
-                    console.log(jsonData)
-                    checkUserToken(localStorage.getItem(localSt))
-                    .then( apiResponse => {
-                        displayFavorite(apiResponse.data.favorite)
-                    } )
-                }
-            })
-            .catch( apiError => {
-                console.error(apiError);
-            });
-        }
-
-        const deleteFetch = id => {
-            console.log(id)
-            fetch( `${apiUrl}/api/favorite/${id}`, {
-                method: 'DELETE'
-            })
-            .then( apiResponse => {
-                console.log(apiResponse)
-            })
-            .catch( apiError => {
-                console.log(apiError)
-            })
-        }
+        const chatId =  () => {
+            // Math.random should be unique because of its seeding algorithm.
+            // Convert it to base 36 (numbers + letters), and grab the first 9 characters
+            // after the decimal.
+            return Math.random().toString(36).substr(2, 9);
+        };
 
         const displayError = (tag, msg) => {
             searchLabel.textContent = msg;
             tag.addEventListener('focus', () => searchLabel.textContent = '');
-        };
-
-        const fetchFunction = (keywords, index = 1) => {
-            
-
-            let fetchUrl = null;
-
-            typeof keywords === 'number' 
-            ? fetchUrl = `https://api.themoviedb.org/3/movie/${keywords}?api_key=6fd32a8aef5f85cabc50cbec6a47f92f`
-            : fetchUrl = themoviedbUrl + keywords + '&page=' + index
-
-
-            fetch( fetchUrl )
-            .then( response => response.ok ? response.json() : 'Response not OK' )
-            .then( jsonData => {
-                typeof keywords === 'number' 
-                ? displayPopin(jsonData)
-                : displayMovieList(jsonData.results);
-            })
-            .catch( err => console.error(err) );
         };
 
         const displayMovieList = collection => {
@@ -214,8 +220,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const getPopinLink = linkCollection => {
             for( let link of linkCollection ){
                 link.addEventListener('click', () => {
-                    // +var = parseInt(var) || parseFloat(var)
-                    fetchFunction( +link.getAttribute('movie-id') );
+                    new FETCHrequest(`https://api.themoviedb.org/3/movie/${link.getAttribute('movie-id')}?api_key=6fd32a8aef5f85cabc50cbec6a47f92f`, 'GET')
+                    .fetch()
+                    .then( fetchData => {
+                        console.log(fetchData)
+                        displayPopin(fetchData)
+                    })
+                    .catch( fetchError => {
+                        console.log(fetchError)
+                    })
+                    
                 });
             };
         };
@@ -292,10 +306,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const addFavorite = (tag, data) => {
             tag.addEventListener('click', () => {
-                postFetch('favorite', { 
+                new FETCHrequest(`${apiUrl}/api/favorite`, 'POST', { 
                     author: localStorage.getItem(localSt),
                     id: data.id,
                     title: data.original_title
+                })
+                .fetch()
+                .then( fetchData => {
+                    checkUserToken('favorite')
+                })
+                .catch( fetchError => {
+                    console.log(fetchError)
                 })
             })
         }
@@ -305,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for(let item of data){
                 favoriteList.innerHTML += `
                     <li>
-                        <button class="eraseFavorite" movie-id="${item.id}"><i class="fas fa-eraser"></i></button>
+                        <button class="eraseFavorite" movie-id="${item._id}"><i class="fas fa-eraser"></i></button>
                         <span  movie-id="${item.id}">${item.title}</span>
                     </li>
                 `;
@@ -318,7 +339,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const deleteFavorite = favorites => {
             for( let item of favorites ){
                 item.addEventListener('click', () => {
-                    deleteFetch(item.getAttribute('movie-id'))
+                    new FETCHrequest( `${apiUrl}/api/favorite/${item.getAttribute('movie-id')}`, 'DELETE' )
+                    .fetch()
+                    .then( fetchData => checkUserToken('favorite'))
+                    .catch( fetchError => {
+                        console.log(fetchError)
+                    })
                 })
             }
         }
@@ -335,38 +361,44 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 
     Lancer IHM
     */
+        /* 
+        Start interface by checkingg if user token is prersent
+        */
         if( localStorage.getItem(localSt) !== null ){
-            
-            checkUserToken(localStorage.getItem(localSt))
+            console.log(localStorage.getItem(localSt))
+            // Get user onnfoprmations
+            checkUserToken('checkuser');
+
+
+            /* checkUserToken(localStorage.getItem(localSt))
             .then( apiResponse => {
+                
+                // Display favorites
                 if( apiResponse.data.favorite.length > 0 ){
                     displayFavorite(apiResponse.data.favorite)
                 }
 
+                // Save usr pseudo
+                localStorage.setItem('user-pseudo', apiResponse.data.user.pseudo)
+
+                // Hide register and loggin form
                 registerForm.classList.add('hidden');
                 loginForm.classList.add('hidden');
                 searchForm.classList.add('open');
-                displayNav(apiResponse.data.user.pseudo)
+
+                // Display nav
+                displayNav(apiResponse.data.user.pseudo);
+
+                // Get form submit event
                 getFormSumbit();
             })
             .catch( err => {
-                console.log(err)
+                // Get form submit event
                 getFormSumbit();
-            } )
+            }); */
         }
         else{
             getFormSumbit();
-        }
-
-        // https://vsrequest.video/request.php?key=oh61giHx16GXKSIz&secret_key=h9oe5ezesk0c0f9zk143zpkd7tba63&video_id=*VIDEO_ID*&tmdb=*TMDB*&tv=*TV*&s=*SEASON_NUMBER*&ip=*VISITOR_IP* http://127.0.0.1:8080
-
-        fetch('https://vsrequest.video/request.php?key=oh61giHx16GXKSIz&secret_key=h9oe5ezesk0c0f9zk143zpkd7tba63&video_id=348&tmdb=1&ip=77.204.106.82')
-        .then( spiderVideoResponse => {
-            console.log(spiderVideoResponse)
-        })
-        .catch( spiderVideoError => {
-            console.log(spiderVideoError)
-        })
-        
+        };
     //
 });

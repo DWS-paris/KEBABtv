@@ -11,8 +11,16 @@
     border: 0.1rem solid var(--main-color);
 }
 
+button{
+    height: auto;
+}
+
 input[type='email']:focus, input[type='number']:focus, input[type='password']:focus, input[type='search']:focus, input[type='tel']:focus, input[type='text']:focus, input[type='url']:focus, textarea:focus, select:focus{
     border-color: var(--main-color);
+}
+
+input, textarea{
+    color: white ;
 }
 
 ul{
@@ -84,6 +92,7 @@ button, figure, figcaption, #moviePopin, #movieList, #favorite li, #loading{
 header{
     width: calc(25% - 1rem);
     padding: 4rem;
+    position: relative;
 }
 
 .logo {
@@ -352,4 +361,16 @@ figcaption {
     top: 50%;
     left: 50%;
     transform: translate(-80%, -50%);
+}
+
+#chatboxe{
+    position: absolute;
+    bottom: 0;
+    left: 2rem;
+    width: calc(100% - 4rem);
+}
+
+#chatboxe form{
+    display: flex;
+    align-items: stretch;
 }
